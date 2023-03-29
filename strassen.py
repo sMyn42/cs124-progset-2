@@ -2,6 +2,7 @@ import numpy as np
 import math
 import random
 import sys
+import time
 
 def main():
     arrfile = sys.argv[3]
@@ -73,9 +74,11 @@ def strassen_variant(a, b, n0):
 
 def mat_mul(a, b):
     c = np.zeros(a.shape, dtype=np.int32)
-    for i in range(a.shape[0]):
-        for j in range(a.shape[1]):
-            c[i, j] = int(np.dot(a[i, :], b[:, j]))
+    for i in range(a.shape[0]):     
+        for j in range(b.shape[1]):
+            for k in range(a.shape[1]):    
+                c[i, j] += a[i, k] * b[k, j]
+            # c[i, j] = int(np.dot(a[i, :], b[:, j]))
     return c
     
 def create_test_matrix(n, l):
@@ -83,7 +86,14 @@ def create_test_matrix(n, l):
     a = np.zeros((n, n))
     for i in range(n):
         for j in range(n):
-            a[i, j] = math.floor(random.random() * p)     
+            a[i, j] = l[math.floor(random.random() * p)]
+    return a
+
+def create_test_adj_matrix(n, p):
+    a = np.zeros((n, n))
+    for i in range(n):
+        for j in range(n):
+            a[i, j] = 1 if random.random() < p else 0
     return a
 
 def output_diag(arr):
@@ -92,11 +102,36 @@ def output_diag(arr):
     return 0
     
 def time_algos():
-    return 0
+    f = open("algorithms_runtimes.txt", 'w')
+    f.write("        n          |         n0         |      elements      |      time \n")
+    n_list = [8, 16, 32, 64, 128, 256, 512, 1024]
+    # n_list = [1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700]
+    # n_list = [1600, 1625, 1650, 1675, 1700]
+    l_list = [[0, 1]]#, [-1, 0, 1], [0, 1, 2, 3]]
+    for n in n_list:
+        for l in l_list:
+            a = create_test_matrix(n, l)
+            b = create_test_matrix(n, l)
+            t = time.time()
+            mat_mul(a, b)
+            t = str(time.time() - t)
+            f.write(str(n).ljust(18) + " | " + "*CONVENTIONAL*".ljust(18) + " | " + str(l).ljust(18) + " | " + t.ljust(18) + "\n")
+        
+            n0i = n - 1
+            # a = create_test_matrix(n, l)
+            # b = create_test_matrix(n, l)
+            t = time.time()
+            strassen_variant(a, b, n0i)
+            t = str(time.time() - t)
+            f.write(str(n).ljust(18) + " | " + str(n0i).ljust(18) + " | " + str(l).ljust(18) + " | " + t.ljust(18) + "\n")
+    f.close()
+    return 
 
 def find_triangles():
     return 0
 
 if __name__ == "__main__":
     main()
-    #time_algos()
+    # time_algos()
+    # print(create_test_matrix(10, [1, 2, 3]))
+    # print(create_test_matrix(4, [0, -1]))
