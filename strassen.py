@@ -92,8 +92,9 @@ def create_test_matrix(n, l):
 def create_test_adj_matrix(n, p):
     a = np.zeros((n, n))
     for i in range(n):
-        for j in range(n):
+        for j in range(i):
             a[i, j] = 1 if random.random() < p else 0
+            a[j, i] = a[i, j]
     return a
 
 def output_diag(arr):
@@ -104,10 +105,10 @@ def output_diag(arr):
 def time_algos():
     f = open("algorithms_runtimes.txt", 'w')
     f.write("        n          |         n0         |      elements      |      time \n")
-    n_list = [8, 16, 32, 64, 128, 256, 512, 1024]
+    n_list = list(range(4, 64, 1))
     # n_list = [1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700]
     # n_list = [1600, 1625, 1650, 1675, 1700]
-    l_list = [[0, 1]]#, [-1, 0, 1], [0, 1, 2, 3]]
+    l_list = [[-1, 0, 1]]#, [-1, 0, 1], [0, 1, 2, 3]]
     for n in n_list:
         for l in l_list:
             a = create_test_matrix(n, l)
@@ -116,22 +117,33 @@ def time_algos():
             mat_mul(a, b)
             t = str(time.time() - t)
             f.write(str(n).ljust(18) + " | " + "*CONVENTIONAL*".ljust(18) + " | " + str(l).ljust(18) + " | " + t.ljust(18) + "\n")
-        
-            n0i = n - 1
-            # a = create_test_matrix(n, l)
-            # b = create_test_matrix(n, l)
-            t = time.time()
-            strassen_variant(a, b, n0i)
-            t = str(time.time() - t)
-            f.write(str(n).ljust(18) + " | " + str(n0i).ljust(18) + " | " + str(l).ljust(18) + " | " + t.ljust(18) + "\n")
+            
+            for n0i in []:
+                n0i = math.ceil(n/2)
+                # a = create_test_matrix(n, l)
+                # b = create_test_matrix(n, l)
+                t = time.time()
+                strassen_variant(a, b, n0i)
+                t = str(time.time() - t)
+                f.write(str(n).ljust(18) + " | " + str(n0i).ljust(18) + " | " + str(l).ljust(18) + " | " + t.ljust(18) + "\n")
     f.close()
     return 
 
-def find_triangles():
+def find_triangles(ntrials):
+    f = open("triangles.txt", "w")
+    for p in [0.01, 0.02, 0.03, 0.04, 0.05]:
+        for j in range(ntrials):
+            a = create_test_adj_matrix(1024, p)
+            c = strassen_variant(strassen_variant(a, a, 64), a, 64)
+            t_ct = 0
+            for i in range(c.shape[0]):
+                t_ct += (c[i, i])
+            t_ct = int(t_ct / 6)
+            f.write("# triangles in graph with 1024 vertices and edges generated with probability " + str(p) + ": " + str(t_ct) + "\n")
+    f.close()
     return 0
 
 if __name__ == "__main__":
-    main()
-    # time_algos()
-    # print(create_test_matrix(10, [1, 2, 3]))
-    # print(create_test_matrix(4, [0, -1]))
+    # main()
+    time_algos()
+    # find_triangles(5)
